@@ -37,7 +37,8 @@ services:
   subscriber:
     build:
       context: .
-      dockerfile: Dockerfile.subscriber
+      dockerfile: Dockerfile
+      target: subscriber
     container_name: subscriber
     depends_on:
       - zenoh
@@ -49,7 +50,8 @@ services:
   publisher:
     build:
       context: .
-      dockerfile: Dockerfile.publisher
+      dockerfile: Dockerfile
+      target: publisher
     container_name: publisher
     depends_on:
       - zenoh
@@ -61,7 +63,8 @@ services:
   provider:
     build:
       context: .
-      dockerfile: Dockerfile.provider
+      dockerfile: Dockerfile
+      target: provider
     container_name: provider
     depends_on:
       - zenoh
