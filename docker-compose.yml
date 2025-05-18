@@ -1,0 +1,77 @@
+services:
+  zenoh:
+    image: eclipse/zenoh:latest
+    container_name: zenoh
+    ports:
+      - "7447:7447"
+    networks:
+      - kuksa
+
+  databroker:
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker:latest
+    container_name: databroker
+    command: ["--insecure", "--vss", "/app/vss.json"]
+    volumes:
+      - type: bind
+        source: ./vss.json
+        target: /app/vss.json
+        read_only: true
+    ports:
+      - "55555:55555"
+    networks:
+      - kuksa
+
+  databroker-cli:
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker-cli:main
+    container_name: databroker-cli
+    depends_on:
+      - databroker
+    command:
+      - "--server"
+      - "databroker:55555"
+    stdin_open: true
+    tty: true
+    networks:
+      - kuksa
+
+  subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.subscriber
+    container_name: subscriber
+    depends_on:
+      - zenoh
+    environment:
+      - RUST_LOG=debug,zenoh=debug
+    networks:
+      - kuksa
+
+  publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile.publisher
+    container_name: publisher
+    depends_on:
+      - zenoh
+    environment:
+      - RUST_LOG=debug,zenoh=debug
+    networks:
+      - kuksa
+
+  provider:
+    build:
+      context: .
+      dockerfile: Dockerfile.provider
+    container_name: provider
+    depends_on:
+      - zenoh
+      - databroker
+    environment:
+      - RUST_LOG=debug,zenoh=debug
+    networks:
+      - kuksa
+
+
+networks:
+  kuksa:
+    driver: bridge
