@@ -1,10 +1,13 @@
+use std::any::Any;
+use std::hash::RandomState;
 use std::time::Duration;
+use rand::prelude::*;
 
 use clap::Parser;
 use zenoh::{bytes::Encoding, key_expr::KeyExpr, Config};
 use zenoh::bytes::ZBytes;
 
-const CONFIG: &str = 
+const CONFIG: &str =
     r#"{
         "mode": "client",
         "connect": {
@@ -27,17 +30,30 @@ async fn main() {
     println!("Declaring Publisher on 'Vehicle/ADAS/PowerOptimizeLevel'...");
     let publisher = session.declare_publisher("Vehicle/ADAS/PowerOptimizeLevel").await.unwrap();
 
-    let value: i32 = 5;
+    let mut value: u8 = 254;
     
     println!("Press CTRL-C to quit...");
-    loop {    
-        tokio::time::sleep(Duration::from_secs(1)).await;
-        println!("Putting Data ('Vehicle/ADAS/PowerOptimizeLevel': '{}')...", value);
+    loop {
         // Refer to z_bytes.rs to see how to serialize different types of message
         let payload = ZBytes::from(&value.to_be_bytes()[..]);
+        println!("Putting Data ('Vehicle/ADAS/PowerOptimizeLevel': '{}' | {:?})...",
+                 value,
+                 payload
+        );
         publisher
             .put(payload)
             .await
             .unwrap();
+
+        // u8 goes from 0-255
+        // Here 10 because the subscribed key has only 10 levels
+        if(value >= 10) {
+            value = 0;
+        } else {
+            // A little bit of randomness
+            // let mut rng = rand::rng();
+            value += (random::<u8>() % 2) as u8;
+        }
+        tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }

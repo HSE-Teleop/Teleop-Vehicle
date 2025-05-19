@@ -33,10 +33,10 @@ async fn main(){
     println!("Listening for updates every second. Press CTRL-C to quit.");
     while let Ok(sample) = subscriber.recv_async().await {
         println!(
-            "← [{}] '{}' → '{}'",
+            "← [{}] '{}' → '{:?}'",
             sample.kind(),
             sample.key_expr().as_str(),
-            sample.payload().try_to_string().unwrap()
+            sample.payload()
         );
     }
 }
