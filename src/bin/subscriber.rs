@@ -1,6 +1,4 @@
-use std::convert::TryInto;
-use tokio::time::{sleep, Duration};
-use zenoh::{bytes::ZBytes, Config};
+use zenoh::Config;
 
 /// Inline Zenoh JSON5 config to run as a client against your router.
 const CONFIG: &str = r#"
@@ -25,17 +23,21 @@ async fn main(){
     let session = zenoh::open(config).await.unwrap();
 
     // 3) Declare a subscriber on our fixed key
-    let key = "Vehicle/ADAS/PowerOptimizeLevel";
+    let key = "Vehicle/**";
+    // let key = "Vehicle/ADAS/PowerOptimizeLevel";
     println!("Declaring Subscriber on '{}'…", key);
     let subscriber = session.declare_subscriber(key).await.unwrap();
 
     // 4) Loop forever, printing each incoming i32
     println!("Listening for updates every second. Press CTRL-C to quit.");
     while let Ok(sample) = subscriber.recv_async().await {
+        let z_key_value = sample.payload();
+        let vector_value = z_key_value.slices().fold(Vec::new(), |mut b, x| { b.extend_from_slice(x); b });
         println!(
-            "← [{}] '{}' → '{:?}'",
+            "← [{}] '{}' → {:?} / {:?}",
             sample.kind(),
             sample.key_expr().as_str(),
+            vector_value,
             sample.payload()
         );
     }

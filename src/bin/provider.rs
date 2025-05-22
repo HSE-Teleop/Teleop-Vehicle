@@ -1,9 +1,17 @@
-use std::time::Duration;
+use std::string::ToString;
+use std::sync::Arc;
 use kuksa_rust_sdk::kuksa::common::ClientTraitV2;
 use kuksa_rust_sdk::kuksa::val::v2::KuksaClientV2;
 use kuksa_rust_sdk::v2_proto;
+use std::time::Duration;
 
-use zenoh::{bytes::ZBytes, Config};
+mod utils;
+use utils::utils::get_type_of;
+use utils::kuksa_utils::create_kuksa_client;
+
+use zenoh::{Config, Session};
+use zenoh::bytes::ZBytes;
+use crate::utils::zenoh_utils::create_zenoh_session;
 
 /// Inline Zenoh JSON5 config to run as a client against your router.
 const CONFIG: &str = r#"
@@ -17,26 +25,23 @@ const CONFIG: &str = r#"
 }
 "#;
 
-async fn create_sdv_client() -> KuksaClientV2 {
-    println!("Creating client...");
-    let host = "http://databroker:55555";
-    KuksaClientV2::from_host(host)
-}
-
 async fn subscribe_to_vehicle_speed(vss_path: String) {
     println!("Subscribing to vehicle...");
-    let mut v2_client = create_sdv_client().await;
+    let mut v2_client = create_kuksa_client("").await;
     match v2_client.subscribe(vec![vss_path.to_owned()], None).await
     {
         Ok(mut stream) => {
             println!("✅ Subscribed to {}!", vss_path);
             tokio::spawn(async move {
                 // KEEP READING until the server closes the stream or an error occurs
+                let session = zenoh::open(zenoh::Config::default()).await.unwrap();
                 while let Ok(Some(response)) = stream.message().await {
                     for (_path, datapoint) in response.entries {
                         println!("{}: {:?}", vss_path, datapoint);
+                        session.put("Vehicle.ADAS.PowerOptimizeLevel", "1").await.unwrap();
                     }
                 }
+                session.close().await.unwrap();
                 println!("⚠️ Subscription to {} ended or errored out", vss_path);
             });
         }
@@ -45,10 +50,9 @@ async fn subscribe_to_vehicle_speed(vss_path: String) {
         }
     }
 }
-
 async fn update_vehicle_speed(vss_path: String, value: u8) {
     println!("Updating vehicle speed...");
-    let mut v2_client = create_sdv_client().await;
+    let mut v2_client = create_kuksa_client("").await;
     match v2_client.publish_value(
         vss_path.to_owned(),
         v2_proto::Value {
@@ -72,22 +76,56 @@ async fn update_vehicle_speed(vss_path: String, value: u8) {
     }
 }
 
-fn get_type_of<T>(_: &T) -> &'static str {
-    std::any::type_name::<T>()
+
+
+
+
+async fn handle_databroker_publication(zenoh_session: Session, vss_paths: String) {
+    let mut v2_client = create_kuksa_client("").await;
+    let paths = vec![vss_paths.to_owned()];         // Can't subscribe to all paths in tree
+    println!("✅ Subscribed to {:?}!", paths);
+    match v2_client.subscribe(paths, None).await
+    {
+        Ok(mut stream) => {
+            // let session = zenoh::open(zenoh::Config::default()).await.unwrap();
+            while let Ok(Some(response)) = stream.message().await {
+                for (_path, datapoint) in response.entries {
+                    let value: u8 = 1;
+                    // let value = datapoint.to_owned().value.unwrap().typed_value.unwrap();
+                    let payload = ZBytes::from(&value.to_be_bytes()[..]);
+                    println!("Published {:?} -> '{:?}' on path {}: {:?}", value, payload, _path, datapoint);
+                    zenoh_session.put(_path.replace(".", "/"), payload).await.unwrap();
+                }
+            }
+            // session.close().await.unwrap();
+            println!("⚠️ Subscription to {} ended or errored out", vss_paths);
+        }
+        Err(err) => {
+            println!("❌ Failed to subscribe to: {:?}", err);
+        }
+    }
 }
+
+
 
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
-    subscribe_to_vehicle_speed("Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap()).await;
-    update_vehicle_speed("Vehicle.ADAS.PowerOptimizeLevel".to_owned(), 5).await;
+    // subscribe_to_vehicle_speed("Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap()).await;
+    // update_vehicle_speed("Vehicle.ADAS.PowerOptimizeLevel".to_owned(), 5).await;
 
-    // 1) Init logging
-    zenoh::init_log_from_env_or("error");
-    // 2) Parse and open session
-    let config = Config::from_json5(CONFIG).unwrap();
-    println!("Opening Zenoh client session…");
-    let session = zenoh::open(config).await.unwrap();
+    let zenoh_session = create_zenoh_session(CONFIG).await;
+    
+    let databroker_handle = tokio::spawn({
+        // let session = Arc::clone(&zenoh_session);
+        let session = zenoh_session.clone();
+        handle_databroker_publication(zenoh_session, "Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap())
+    });
+
+    let _ = databroker_handle.await;
+    
+    /*
+    let session = create_zenoh_session(CONFIG).await;
     // 3) Declare a subscriber on our fixed key
     let key = "Vehicle/ADAS/PowerOptimizeLevel";
     println!("Declaring Subscriber on '{}'…", key);
@@ -126,4 +164,19 @@ async fn main() {
         
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+
+    let subscriber_handle = tokio::spawn({
+        let session = Arc::clone(&zenoh_session);
+        let metadata_store = Arc::clone(&metadata_store);
+        handling_zenoh_subscription(session, metadata_store, client)
+    });
+
+    let publisher_handle = tokio::spawn({
+        let session = Arc::clone(&zenoh_session);
+        publish_to_zenoh(provider_config, session, actuation_client)
+    });
+
+    let _ = subscriber_handle.await;
+    let _ = publisher_handle.await;
+    Ok(())*/
 }

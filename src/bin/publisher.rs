@@ -34,7 +34,7 @@ async fn main() {
     
     println!("Press CTRL-C to quit...");
     loop {
-        // Refer to z_bytes.rs to see how to serialize different types of message
+        // Refer to z_bytes.rs to see how to serialize different types of messages
         let payload = ZBytes::from(&value.to_be_bytes()[..]);
         println!("Putting Data ('Vehicle/ADAS/PowerOptimizeLevel': '{}' | {:?})...",
                  value,
@@ -48,12 +48,12 @@ async fn main() {
         // u8 goes from 0-255
         // Here 10 because the subscribed key has only 10 levels
         if(value >= 10) {
-            value = 0;
+            value = 2;      // Resets level to 2 to reserve 0 & 1 for databroker
         } else {
             // A little bit of randomness
             // let mut rng = rand::rng();
             value += (random::<u8>() % 2) as u8;
         }
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        tokio::time::sleep(Duration::from_secs(3)).await;
     }
 }
