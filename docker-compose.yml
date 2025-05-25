@@ -70,7 +70,7 @@ services:
       - zenoh
       - databroker
     environment:
-      - RUST_LOG=info,zenoh=debug
+      - RUST_LOG=info,zenoh=debug,RUST_BACKTRACE=1
     networks:
       - kuksa
 
