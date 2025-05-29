@@ -57,6 +57,10 @@ async fn main() {
             // let mut rng = rand::rng();
             value += (random::<u8>() % 2) as f32;
         }
-        tokio::time::sleep(Duration::from_secs(3)).await;
+        
+        // Delays the zenoh message sometimes
+        if random::<i32>() % 2 == 0 {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
     }
 }

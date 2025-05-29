@@ -37,24 +37,21 @@ async fn main(){
     while let Ok(sample) = subscriber.recv_async().await {
         let z_key_value = sample.payload();
         let vector_value = z_key_value.slices().fold(Vec::new(), |mut b, x| { b.extend_from_slice(x); b });
-        let key_value = vector_value[0];
         
         // Should convert everything into a string
         let string_value = z_key_value.clone().slices().map(|_byte| String::from_utf8(Vec::from(_byte)).unwrap()).fold(String::new(), |mut _msg, _char| { _msg.insert_str(_msg.len(), &*_char); _msg });
         
         println!(
-            "DEBUG: {:?} \nVector<u8>: {:?} \nString: {:?}",
+            "DEBUG: {:?} \nVector<u8>: {:?}",
             sample,
-            vector_value,
-            string_value,
+            vector_value
         );
         
         println!(
-            "← [{}] '{}' → {:?} {:?}\n",
+            "← [{}] '{}' → {}\n",
             sample.kind(),
             sample.key_expr().as_str(),
-            key_value,
-            get_type_of(&key_value),
+            string_value,
         );
     }
 }
