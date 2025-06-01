@@ -11,7 +11,7 @@ mod utils;
 use utils::kuksa_utils::create_kuksa_client;
 
 use crate::utils::kuksa_utils::{s_typed_value_to_zenoh_bytes, typed_value_to_string};
-use crate::utils::provider_utils::MessageCache;
+use crate::utils::provider_utils::{Message, MessageCache};
 use crate::utils::utils::wrap_value_by_typed_value;
 use crate::utils::zenoh_utils::create_zenoh_session;
 use zenoh::bytes::ZBytes;
@@ -36,7 +36,7 @@ const CONFIG: &str = r#"
 ///     Downcasts the datapoint value to a string
 async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, mut v2_client: KuksaClientV2, zenoh_session: Session, signals: Vec<String>) {
     // let mut v2_client = create_kuksa_client("").await;
-    // let paths = vec![vss_paths.to_owned()];         // Can't subscribe to all paths in tree
+    // let paths = vec![vss_paths.to_owned()];         // Can't subscribe to all paths in the tree
     println!("✅ Subscribed to {:?}!", signals);
     match v2_client.subscribe(signals.clone(), None).await
     {
@@ -51,12 +51,14 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                     println!("DEBUG: {:?} => {} & '{:?}'", datapoint, parsed_message, payload);
 
                     let publish_to_zenoh: bool;
-                    let double_message: Option<String>;
+                    let double_message: Option<Message>;
                     // Comparing and discarding double messages
                     {
                         // Tries to acquire a lock
                         let mut mutex = message_cache.lock().unwrap();
-                        (publish_to_zenoh, double_message) = mutex.expect_outgoing_message(parsed_message.clone());
+                        (publish_to_zenoh, double_message) = mutex.expect_outgoing_message(
+                            Message::new(parsed_message.clone(), _path.clone())
+                        );
                     }
 
                     if publish_to_zenoh {
@@ -68,7 +70,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                             .await.unwrap();
                         println!("Published {:?} -> {}", value, _path);
                     } else {
-                        println!("Debug: Found double {}", double_message.unwrap_or("None".parse().unwrap()));
+                        println!("Debug: Found double {:?}", double_message.unwrap());
                     }
                 }
                 tokio::time::sleep(Duration::from_secs(1)).await;
@@ -144,7 +146,7 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
         {
             // Tries to acquire a lock
             let mut mutex = message_cache.lock().unwrap();
-            mutex.push_message(inferred_value.clone());
+            mutex.push_message(inferred_value.clone(), signal.clone());
         }
 
         /**/
@@ -178,7 +180,7 @@ async fn main() {
     println!("Starting provider...");
 
     // Using own storage for the provider to handle messages
-    let provider_queue = Arc::new(Mutex::new( MessageCache { msg: VecDeque::new() } ));
+    let provider_queue = Arc::new(Mutex::new( MessageCache { message: VecDeque::new() } ));
     // Creating kuksa client to subscribe on the databroker
     let v2_client = create_kuksa_client("").await;
     // Creating another kuksa client for zenoh communication
