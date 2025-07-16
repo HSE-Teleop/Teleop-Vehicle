@@ -73,7 +73,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                         println!("Debug: Found double {:?}", double_message.unwrap());
                     }
                 }
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                // tokio::time::sleep(Duration::from_secs(1)).await;
             }
             // session.close().await.unwrap();
             println!("⚠️ Subscription to {:?} ended or errored out", signals);
@@ -189,13 +189,15 @@ async fn main() {
     // let paths = "Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap();
     // Later replace the array with the config
     let paths = vec![
+        "Vehicle.Speed".to_string(),
         "Vehicle.Body.Horn.IsActive".to_string(),
         "Vehicle.ADAS.PowerOptimizeLevel".to_string(),
         "Vehicle.ADAS.CruiseControl.AdaptiveDistanceSet".to_string(),
     ];
     let signal_types = vec![
+        "float".to_string(),
         "bool".to_string(),
-        "uint8".to_string(),
+        "uint32".to_string(),     // Should be uint8
         "float".to_string(),
     ];
     
