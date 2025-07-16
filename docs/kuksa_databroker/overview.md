@@ -1,6 +1,6 @@
 # Kuksa databroker
 
-The kuksa databroker has a database implemented and serves as an interface between communication and physical instruction.
-It is rich in features that make forwarding instructions to the subsystem easier.
+the Kuksa Databroker serves as a central database and communication hub for vehicle signals following the Vehicle Signal Specification.
+It allows applications in the vehicles to interact with the vehilces sensors and actuators using a high level gRPC API
+for querying signals, updating values of sensors and actuators and getting notified about changes to signals.
 
-Used version is v_2.
