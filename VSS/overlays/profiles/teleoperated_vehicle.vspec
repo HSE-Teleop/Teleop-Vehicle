@@ -15,23 +15,3 @@
 Vehicle:
     type: branch
 
-
-
-
-Vehicle.SpeedCommand:
-    type: attribute
-    datatype: float
-    unit: km/h
-    description: Desired speed
-
-# Other approach but not sure if attribute type can be converted into branch type
-
-Vehicle.Speed:
-    type: branch
-    instances: ["signal","command"]
-
-Vehicle.Speed:
-    type: attribute
-    datatype: float
-    unit: km/h
-    description: Current/Desired speed
