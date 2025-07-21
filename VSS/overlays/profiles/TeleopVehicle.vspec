@@ -40,9 +40,10 @@ Vehicle.Chassis.RearCamera:
     datatype: boolean
     description: Check if the rearcamera exists.
 
+
 # Telemetry data
 
-Speed:
+Vehicle.Speed:
     type: sensor
     datatype: float
     unit: km/h
@@ -54,11 +55,11 @@ Vehicle.PowerTrain:
 Vehicle.PowerTrain.Transmission:
     type: branch
 
-CurrentGear:
+Vehicle.PowerTrain.Transmission.CurrentGear:
     type: sensor
     datatype: int8
     min: -1
-    max: 1,
+    max: 1
     description: The current gear. 
                 -1 = Reverse, 
                 0 = Neutral, 

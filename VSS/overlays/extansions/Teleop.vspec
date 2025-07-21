@@ -3,4 +3,4 @@ Vehicle:
 
 Vehicle.Teleop:
   type: branch
-  description: Teleoperation data. Holds commands.
+  description: Holds commands for teleoperation data.
