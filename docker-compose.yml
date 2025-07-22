@@ -17,7 +17,7 @@ services:
         target: /app/vss.json
         read_only: true
     ports:
-      - "55555:55555"
+      - "30000:55555"
     networks:
       - kuksa
 
@@ -33,6 +33,33 @@ services:
     tty: true
     networks:
       - kuksa
+
+  can-provider:
+    image: ghcr.io/eclipse-kuksa/kuksa-can-provider/can-provider
+    container_name: can-provider
+    depends_on:
+      - databroker
+    volumes:
+      - type: bind
+        source: ./config/dbc_feeder.ini
+        target: /config/dbc_feeder.ini
+        read_only: true
+      - type: bind
+        source: ./Model3CAN.dbc
+        target: /mapping/Model3CAN.dbc
+        read_only: true
+      - type: bind
+        source: ./mapping/vss_dbc.json
+        target: /mapping/vss_dbc.json
+        read_only: true
+      - type: bind
+        source: ./candump-2021-12-08_151848.log
+        target: /data/candump-2021-12-08_151848.log
+        read_only: true
+    command: ["--config", "/config/dbc_feeder.ini"]
+    networks:
+      - kuksa
+
 
   subscriber:
     build:
