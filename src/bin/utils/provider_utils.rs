@@ -1,5 +1,7 @@
 use std::cmp::PartialEq;
 use std::collections::VecDeque;
+use std::fmt;
+use std::fmt::Debug;
 
 pub struct MessageCache {
     pub message: VecDeque<Message>,
@@ -8,6 +10,12 @@ pub struct MessageCache {
 pub struct Message {
     pub msg: String,
     pub signal: String,
+}
+
+impl fmt::Display for Message {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "'{}': {}", self.signal, self.msg)
+    }
 }
 
 impl PartialEq for Message {
@@ -22,9 +30,13 @@ impl Message {
     }
 }
 
-/// TODO: Maybe work with timestamps to avoid overflow of data.
-///     If something goes wrong and the first entry doesnt met his double the cache wont empty.
-///     Do a check with the timestamp to delete expired messages...
+
+impl fmt::Display for MessageCache {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // let out_stream = self.message.iter().map(|msg| msg.fmt());
+        write!(f, "[{:?}]", self.message)           // for each message
+    }
+}
 
 impl MessageCache {
     pub fn push_message(&mut self, msg: String, signal: String) {

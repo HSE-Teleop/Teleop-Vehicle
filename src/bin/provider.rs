@@ -47,6 +47,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                     let value = datapoint.to_owned().value.unwrap_or_default().typed_value.unwrap_or(TypedValue::String("Empty".into()));
                     let payload = s_typed_value_to_zenoh_bytes(value.clone());
                     let parsed_message = typed_value_to_string(value.clone());
+                    let signal = _path.replace(".", "/");
 
                     println!("DEBUG: {:?} => {} & '{:?}'", datapoint, parsed_message, payload);
 
@@ -57,13 +58,13 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                         // Tries to acquire a lock
                         let mut mutex = message_cache.lock().unwrap();
                         (publish_to_zenoh, double_message) = mutex.expect_outgoing_message(
-                            Message::new(parsed_message.clone(), _path.clone())
+                            Message::new(parsed_message.clone(), signal.clone())
                         );
                     }
 
                     if publish_to_zenoh {
                         zenoh_session.put(
-                            _path.replace(".", "/"),
+                            signal,
                             ZBytes::from(&parsed_message.clone()[..])
                         )
                             .priority(Priority::RealTime)
@@ -73,7 +74,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                         println!("Debug: Found double {:?}", double_message.unwrap());
                     }
                 }
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                // tokio::time::sleep(Duration::from_secs(1)).await;
             }
             // session.close().await.unwrap();
             println!("⚠️ Subscription to {:?} ended or errored out", signals);

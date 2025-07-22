@@ -1,1 +1,5 @@
+# Building output from rust (Cargo?)
 /target
+
+# Local virtual python environment - used to build the vss
+/.venv
