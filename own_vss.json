@@ -14,7 +14,7 @@
             "type": "sensor"
           }
         },
-        "comment": "Is currently used for information data but holds in origanl tree the PedalPosition. Will be considered using this branch for acceleration when its clear how the subsystem operats.",
+        "comment": "Is currently used for information data but holds in original tree the PedalPosition. Will be considered using this branch for acceleration when its clear how the subsystem operates.",
         "description": "All data concerning steering, suspension, wheels, and brakes.",
         "type": "branch"
       },
@@ -77,7 +77,7 @@
             "description": "Keep-alive signal so that the vehicle knows that there is still a connection.",
             "type": "attribute"
           },
-          "StearingAngle": {
+          "SteeringAngle": {
             "datatype": "int16",
             "description": "Represents the current input angle of the steering system, typically corresponds to angle applied by driver on the steering-wheel. Positive for angle in counterclockwise direction (based on ISO8855).",
             "type": "attribute",

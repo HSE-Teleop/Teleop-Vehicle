@@ -19,7 +19,7 @@ Vehicle.Teleop.EnginePower:
                 0 = Neutral state of the engine, 
                 >0 = Engine runs with a percentage of its power.
 
-Vehicle.Teleop.StearingAngle:
+Vehicle.Teleop.SteeringAngle:
     type: attribute
     datatype: int16
     unit: degrees
