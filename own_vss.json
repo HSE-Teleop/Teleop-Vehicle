@@ -51,6 +51,10 @@
       },
       "Speed": {
         "datatype": "float",
+        "dbc2vss": {
+          "interval_ms": 10,
+          "signal": "VelocityFb"
+        },
         "description": "Vehicle speed.",
         "type": "sensor",
         "unit": "km/h"
@@ -63,7 +67,11 @@
             "max": 1,
             "min": -1,
             "type": "attribute",
-            "unit": "percent"
+            "unit": "percent",
+            "vss2dbc": {
+              "interval_ms": 10,
+              "signal": "AccelerationCmd"
+            }
           },
           "Gear": {
             "datatype": "int8",
@@ -81,7 +89,11 @@
             "datatype": "int16",
             "description": "Represents the current input angle of the steering system, typically corresponds to angle applied by driver on the steering-wheel. Positive for angle in counterclockwise direction (based on ISO8855).",
             "type": "attribute",
-            "unit": "degrees"
+            "unit": "degrees",
+            "vss2dbc": {
+              "interval_ms": 10,
+              "signal": "SteeringCmd"
+            }
           }
         },
         "description": "Holds commands for teleoperation data.",
