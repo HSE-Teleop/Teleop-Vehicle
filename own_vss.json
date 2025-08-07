@@ -66,11 +66,13 @@
             "description": "Percentual power of the engine. <0 = Engine works against its current speed, 0 = Neutral state of the engine, >0 = Engine runs with a percentage of its power.",
             "max": 1,
             "min": -1,
-            "type": "attribute",
+            "type": "actuator",
             "unit": "percent",
             "vss2dbc": {
-              "interval_ms": 10,
-              "signal": "AccelerationCmd"
+              "signal": "AccelerationCmd",
+              "transform": {
+                "math": "(x + 1) * 127.5"
+              }
             }
           },
           "Gear": {
@@ -88,11 +90,13 @@
           "SteeringAngle": {
             "datatype": "int16",
             "description": "Represents the current input angle of the steering system, typically corresponds to angle applied by driver on the steering-wheel. Positive for angle in counterclockwise direction (based on ISO8855).",
-            "type": "attribute",
+            "type": "actuator",
             "unit": "degrees",
             "vss2dbc": {
-              "interval_ms": 10,
-              "signal": "SteeringCmd"
+              "signal": "SteeringCmd",
+              "transform": {
+                "math": "x + 128"
+              }
             }
           }
         },

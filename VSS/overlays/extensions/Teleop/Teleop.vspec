@@ -9,7 +9,7 @@ Vehicle.Teleop.HeartBeat:
 
 
 Vehicle.Teleop.EnginePower:
-    type: attribute
+    type: actuator
     datatype: float
     unit: percent
     min: -1
@@ -20,7 +20,7 @@ Vehicle.Teleop.EnginePower:
                 >0 = Engine runs with a percentage of its power.
 
 Vehicle.Teleop.SteeringAngle:
-    type: attribute
+    type: actuator
     datatype: int16
     unit: degrees
     description: Represents the current input angle of the steering system,

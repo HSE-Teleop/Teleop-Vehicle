@@ -6,15 +6,17 @@ Vehicle.Speed:
         interval_ms: 10
 
 Vehicle.Teleop.SteeringAngle:
-    type: attribute
-    datatype: int16
-    vss2dbc:
-        signal: SteeringCmd
-        interval_ms: 10
+  type: actuator
+  datatype: int16
+  vss2dbc:
+    signal: SteeringCmd
+    transform:
+      math: "x + 128"
 
 Vehicle.Teleop.EnginePower:
-    type: attribute
-    datatype: float
-    vss2dbc:
-        signal: AccelerationCmd
-        interval_ms: 10
+  type: actuator
+  datatype: float
+  vss2dbc:
+    signal: AccelerationCmd
+    transform:
+      math: "(x + 1) * 127.5"
