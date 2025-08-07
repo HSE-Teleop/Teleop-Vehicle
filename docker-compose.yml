@@ -13,7 +13,7 @@ services:
     command: ["--insecure", "--vss", "/app/vss.json"]
     volumes:
       - type: bind
-        source: ./vss.json
+        source: ./own_vss.json
         target: /app/vss.json
         read_only: true
     ports:
@@ -45,16 +45,16 @@ services:
         target: /config/dbc_feeder.ini
         read_only: true
       - type: bind
-        source: ./Model3CAN.dbc
-        target: /mapping/Model3CAN.dbc
+        source: ./ModelCarCAN.dbc
+        target: /mapping/ModelCarCAN.dbc
         read_only: true
       - type: bind
-        source: ./mapping/vss_dbc.json
-        target: /mapping/vss_dbc.json
+        source: ./own_vss.json
+        target: /mapping/own_vss.json
         read_only: true
       - type: bind
-        source: ./candump-2021-12-08_151848.log
-        target: /data/candump-2021-12-08_151848.log
+        source: ./candump-2018-09-29_032339.log
+        target: /data/candump-2018-09-29_032339.log
         read_only: true
     command: ["--config", "/config/dbc_feeder.ini"]
     networks:

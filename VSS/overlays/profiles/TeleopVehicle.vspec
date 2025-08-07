@@ -6,7 +6,7 @@
 # more as an example of overlays and is not considered a part of the
 # official specification.
 
-# This file contains adoptions to the main spec concering teleoperated vehicles.
+# This file contains adoptions to the main spec concerning teleoperated vehicles.
 # It addresses telemetry data (e.g. steering angle) and commands (e.g. steering angle command)
 # which are not handled by the default specification and are additional signals.
 
