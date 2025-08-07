@@ -59,6 +59,9 @@ services:
         source: ./candump-2018-09-29_032339.log
         target: /data/candump-2018-09-29_032339.log
         read_only: true
+      - type: bind
+        source: ./dbc_default_values.json
+        target: /dbc_default_values.json
     command: ["--config", "/config/dbc_feeder.ini"]
 
 
