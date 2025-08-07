@@ -39,6 +39,9 @@ services:
     container_name: can-provider
     depends_on:
       - databroker
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
     volumes:
       - type: bind
         source: ./config/dbc_feeder.ini
