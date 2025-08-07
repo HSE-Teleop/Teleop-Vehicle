@@ -60,8 +60,7 @@ services:
         target: /data/candump-2018-09-29_032339.log
         read_only: true
     command: ["--config", "/config/dbc_feeder.ini"]
-    networks:
-      - kuksa
+
 
 
   subscriber:
