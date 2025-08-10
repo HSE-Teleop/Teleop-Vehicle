@@ -1,6 +1,6 @@
 {
-  "SteeringCmd": 128,
-  "AccelerationCmd": 127,
+  "SteeringCmd": 0,
+  "AccelerationCmd": 0,
   "ControlCounter": 0,
   "ControlTimestamp_ms": 0
 }
