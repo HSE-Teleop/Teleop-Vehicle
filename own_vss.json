@@ -86,10 +86,7 @@
             "type": "actuator",
             "unit": "percent",
             "vss2dbc": {
-              "signal": "AccelerationCmd",
-              "transform": {
-                "math": "(x + 1) * 127.5"
-              }
+              "signal": "AccelerationCmd"
             }
           },
           "Gear": {
@@ -110,10 +107,7 @@
             "type": "actuator",
             "unit": "degrees",
             "vss2dbc": {
-              "signal": "SteeringCmd",
-              "transform": {
-                "math": "x + 128"
-              }
+              "signal": "SteeringCmd"
             }
           }
         },
