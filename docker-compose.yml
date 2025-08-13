@@ -36,6 +36,8 @@ services:
 
   can-provider:
     image: ghcr.io/eclipse-kuksa/kuksa-can-provider/can-provider
+    environment:
+      LOG_LEVEL: "debug"
     container_name: can-provider
     depends_on:
       - databroker
