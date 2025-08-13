@@ -61,7 +61,7 @@ services:
         read_only: true
       - type: bind
         source: ./dbc_default_values.json
-        target: /dbc_default_values.json
+        target: /mapping/dbc_default_values.json
     command: ["--config", "/config/dbc_feeder.ini"]
 
 

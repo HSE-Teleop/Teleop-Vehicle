@@ -61,11 +61,28 @@
       },
       "Teleop": {
         "children": {
+          "ControlCounter": {
+            "datatype": "uint8",
+            "description": "Counter",
+            "type": "actuator",
+            "vss2dbc": {
+              "signal": "ControlCounter"
+            }
+          },
+          "ControlTimestampMs": {
+            "datatype": "uint32",
+            "description": "Timestamp in ms",
+            "type": "actuator",
+            "unit": "ms",
+            "vss2dbc": {
+              "signal": "ControlTimestamp_ms"
+            }
+          },
           "EnginePower": {
             "datatype": "float",
             "description": "Percentual power of the engine. <0 = Engine works against its current speed, 0 = Neutral state of the engine, >0 = Engine runs with a percentage of its power.",
-            "max": 1,
-            "min": -1,
+            "max": 1000,
+            "min": -1000,
             "type": "actuator",
             "unit": "percent",
             "vss2dbc": {
