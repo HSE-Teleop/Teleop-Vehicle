@@ -108,6 +108,9 @@
             "unit": "degrees",
             "vss2dbc": {
               "signal": "SteeringCmd"
+            },
+            "dbc2vss": {
+              "signal": "SteeringFb"
             }
           }
         },
