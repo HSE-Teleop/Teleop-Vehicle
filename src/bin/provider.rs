@@ -64,12 +64,12 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
 
                     if publish_to_zenoh {
                         zenoh_session.put(
-                            signal,
+                            signal.clone(),
                             ZBytes::from(&parsed_message.clone()[..])
                         )
                             .priority(Priority::RealTime)
                             .await.unwrap();
-                        println!("Published {:?} -> {}", value, _path);
+                        println!("Published {:?} -> {}", value, signal);
                     } else {
                         println!("Debug: Found double {:?}", double_message.unwrap());
                     }
@@ -126,13 +126,17 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
         
         // Convert string into corresponding type
         let parsed_signal = signal.clone().replace("/", ".");
-        let signal_index = signals.iter().position(|x| x.contains(parsed_signal.clone().as_str())).unwrap();
+        let signal_index = signals.iter().position(|x| x.contains(parsed_signal.clone().as_str()));
+        if(signal_index.is_none()) {
+            println!("{} not subscribed!\n", parsed_signal);
+            continue;
+        }
         
-        let value = wrap_value_by_typed_value(msg.clone(), signal_types[signal_index].clone());
+        let value = wrap_value_by_typed_value(msg.clone(), signal_types[signal_index.unwrap()].clone());
         let inferred_value = typed_value_to_string(value.clone());
         
         println!("DEBUG: {} -> {:?}\n{:?}", 
-                 signal_types[signal_index].clone(), 
+                 signal_types[signal_index.unwrap()].clone(), 
                  value,
                  sample);
         
@@ -189,14 +193,14 @@ async fn main() {
     // let paths = "Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap();
     // Later replace the array with the config
     let paths = vec![
-        "Vehicle.Speed".to_string(),
+        // "Vehicle.Speed".to_string(),
         "Vehicle.Teleop.SteeringAngle".to_string(),
         "Vehicle.Teleop.EnginePower".to_string(),
         "Vehicle.Teleop.ControlCounter".to_string(),
         "Vehicle.Teleop.ControlTimestampMs".to_string(),
     ];
     let signal_types = vec![
-        "float".to_string(),
+        // "float".to_string(),
         "int16".to_string(),
         "float".to_string(),
         "uint8".to_string(),     // Should be uint8

@@ -28,6 +28,8 @@ pub fn unwrap_typed_value(value: TypedValue) -> Option<Box<dyn std::any::Any>> {
 }
 
 /// Tries to parse value into known TypedValue
+/// 
+/// Extend type conversion in 'kuksa_utils' too!
 pub fn wrap_value_by_typed_value(value: String, typed_value: String) -> TypedValue {
     match typed_value.as_str() {
         "string" => TypedValue::String(value.clone()),
