@@ -53,7 +53,10 @@
         "datatype": "float",
         "dbc2vss": {
           "interval_ms": 10,
-          "signal": "VelocityFb"
+          "signal": "VelocityFb",
+          "transform": {
+            "math": "max(-1,min(1,(x-90)/15))"
+          }
         },
         "description": "Vehicle speed.",
         "type": "sensor",
@@ -86,7 +89,10 @@
             "type": "actuator",
             "unit": "percent",
             "vss2dbc": {
-              "signal": "AccelerationCmd"
+              "signal": "AccelerationCmd",
+              "transform": {
+                "math": "round((x*15)+90)"
+              }
             }
           },
           "Gear": {
