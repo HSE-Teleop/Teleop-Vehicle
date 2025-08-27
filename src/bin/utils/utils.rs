@@ -32,6 +32,7 @@ pub fn wrap_value_by_typed_value(value: String, typed_value: String) -> TypedVal
     match typed_value.as_str() {
         "string" => TypedValue::String(value.clone()),
         "bool" => TypedValue::Bool(value.parse::<bool>().unwrap_or(Default::default())),
+        "int16" => TypedValue::Int32(value.parse::<i32>().unwrap_or(Default::default())),
         "uint8" => TypedValue::Uint32(value.parse::<u32>().unwrap_or(Default::default())),
         "uint32" => TypedValue::Uint32(value.parse::<u32>().unwrap_or(Default::default())),
         "float" => TypedValue::Float(value.parse::<f32>().unwrap_or(Default::default())),

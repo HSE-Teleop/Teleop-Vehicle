@@ -191,15 +191,17 @@ async fn main() {
     // Later replace the array with the config
     let paths = vec![
         "Vehicle.Speed".to_string(),
-        "Vehicle.Body.Horn.IsActive".to_string(),
-        "Vehicle.ADAS.PowerOptimizeLevel".to_string(),
-        "Vehicle.ADAS.CruiseControl.AdaptiveDistanceSet".to_string(),
+        "Vehicle.Teleop.SteeringAngle".to_string(),
+        "Vehicle.Teleop.EnginePower".to_string(),
+        "Vehicle.Teleop.ControlCounter".to_string(),
+        "Vehicle.Teleop.ControlTimestampMs".to_string(),
     ];
     let signal_types = vec![
         "float".to_string(),
-        "bool".to_string(),
-        "uint32".to_string(),     // Should be uint8
+        "int16".to_string(),
         "float".to_string(),
+        "uint8".to_string(),     // Should be uint8
+        "uint32".to_string(),
     ];
     
     let databroker_handle = tokio::spawn({
