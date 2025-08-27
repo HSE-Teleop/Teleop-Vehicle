@@ -152,7 +152,7 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
 
         /**/
         // Publishing to the databroker
-        match v2_client.publish_value(
+        match v2_client.actuate(
             parsed_signal.to_owned(),
             v2_proto::Value {
                 typed_value: Some(value),
