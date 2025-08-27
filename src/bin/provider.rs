@@ -102,6 +102,14 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
     let subscriber = zenoh_session.declare_subscriber("Vehicle/**").await.unwrap();
 
     while let Ok(sample) = subscriber.recv_async().await {
+        
+        // Checks if the zenoh message is tagged by the provider itself
+        // Tagging is done by setting the priority of the message to RealTime
+        if sample.priority() == Priority::RealTime {
+            println!("Discarding incoming message\n");
+            continue;
+        }
+        
         let signal = sample.key_expr().to_string();
         
         // Should convert everything into a string
@@ -135,13 +143,6 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
             println!("Maybe there was an invalid type on this path. Check your configuration!");
             continue;
         }
-
-        // Checks if the zenoh message is tagged by the provider itself
-        // Tagging is done by setting the priority of the message to RealTime
-        if sample.priority() == Priority::RealTime {
-            println!("Discarding incoming message\n");
-            continue;
-        }
         
         // Caching incoming messages
         {
@@ -150,7 +151,6 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
             mutex.push_message(inferred_value.clone(), signal.clone());
         }
 
-        /**/
         // Publishing to the databroker
         match v2_client.actuate(
             parsed_signal.to_owned(),
@@ -170,8 +170,7 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
                     parsed_signal, err
                 );
             }
-        }// */
-        // tokio::time::sleep(Duration::from_secs(3)).await;
+        }
     }
 }
 
