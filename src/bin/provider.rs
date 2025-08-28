@@ -35,7 +35,7 @@ const CONFIG: &str = r#"
 /// 
 /// Signals:
 ///     Downcasts the datapoint value to a string
-async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, mut v2_client: KuksaClientV2, zenoh_session: Session, signals: Vec<String>) {
+async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, mut v2_client: KuksaClientV2, zenoh_session: Session, signals: Vec<String>, enable_cache: bool) {
     // let mut v2_client = create_kuksa_client("").await;
     // let paths = vec![vss_paths.to_owned()];         // Can't subscribe to all paths in the tree
     println!("✅ Subscribed to {:?}!", signals);
@@ -54,13 +54,18 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
 
                     let publish_to_zenoh: bool;
                     let double_message: Option<Message>;
-                    // Comparing and discarding double messages
-                    {
-                        // Tries to acquire a lock
-                        let mut mutex = message_cache.lock().unwrap();
-                        (publish_to_zenoh, double_message) = mutex.expect_outgoing_message(
-                            Message::new(parsed_message.clone(), signal.clone())
-                        );
+                    if(enable_cache) {
+                        // Comparing and discarding double messages
+                        {
+                            // Tries to acquire a lock
+                            let mut mutex = message_cache.lock().unwrap();
+                            (publish_to_zenoh, double_message) = mutex.expect_outgoing_message(
+                                Message::new(parsed_message.clone(), signal.clone())
+                            );
+                        }
+                    } else {
+                        publish_to_zenoh = true;
+                        double_message = None;
                     }
 
                     if publish_to_zenoh {
@@ -93,7 +98,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
 /// 
 /// Conversion:
 ///     Uses the defined types to cast the signal value based on the path
-async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut kuksa_client: KuksaClient, zenoh_session: Session, signals: Vec<String>, signal_types: Vec<String>) {
+async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut kuksa_client: KuksaClient, zenoh_session: Session, signals: Vec<String>, signal_types: Vec<String>, enable_cache: bool) {
     if signals.len() != signal_types.len() {
         panic!("Signals and signal types must be of the same length!");
     }
@@ -151,11 +156,13 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
             continue;
         }
         
-        // Caching incoming messages
-        {
-            // Tries to acquire a lock
-            let mut mutex = message_cache.lock().unwrap();
-            mutex.push_message(inferred_value.clone(), signal.clone());
+        if(enable_cache) {
+            // Caching incoming messages
+            {
+                // Tries to acquire a lock
+                let mut mutex = message_cache.lock().unwrap();
+                mutex.push_message(inferred_value.clone(), signal.clone());
+            }
         }
 
         // Publishing to the databroker
@@ -210,7 +217,6 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
 #[tokio::main]
 async fn main() {
     println!("Starting provider...");
-
     // Using own storage for the provider to handle messages
     let provider_queue = Arc::new(Mutex::new( MessageCache { messages: VecDeque::new() } ));
     // Creating kuksa client to subscribe on the databroker
@@ -219,39 +225,78 @@ async fn main() {
     // let v2_client_actuation = create_kuksa_client("").await;
     let v1_client_actuation = create_kuksa_client_v1("").await;
     let zenoh_session = create_zenoh_session(CONFIG).await;
-    // let paths = "Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap();
+    
+    let enable_cache = false;
+    // With cache
+    let mut all_paths = vec![];
+    let mut all_signal_types = vec![];
+    // Without cache
+    let mut actuate_paths = vec![];
+    let mut actuate_types = vec![];
+    let mut subscribe_paths = vec![];
     // Later replace the array with the config
-    let paths = vec![
-        // "Vehicle.Speed".to_string(),
-        "Vehicle.Teleop.SteeringAngle".to_string(),
-        "Vehicle.Teleop.EnginePower".to_string(),
-        // "Vehicle.Teleop.ControlCounter".to_string(),
-        // "Vehicle.Teleop.ControlTimestampMs".to_string(),
-    ];
-    let signal_types = vec![
-        // "float".to_string(),
-        "int16".to_string(),
-        "float".to_string(),
-        // "uint8".to_string(),     // Should be uint8
-        // "uint32".to_string(),
-    ];
+    if(enable_cache) {
+        all_paths = vec![
+            "Vehicle.Speed".to_string(),
+            "Vehicle.Teleop.SteeringAngle".to_string(),
+            "Vehicle.Teleop.EnginePower".to_string(),
+            "Vehicle.Teleop.ControlCounter".to_string(),
+            "Vehicle.Teleop.ControlTimestampMs".to_string(),
+        ];
+        all_signal_types = vec![
+            "float".to_string(),
+            "int16".to_string(),
+            "float".to_string(),
+            "uint8".to_string(),
+            "uint32".to_string(),
+        ];
+    } else {
+        actuate_paths = vec![
+            "Vehicle.Teleop.SteeringAngle".to_string(),
+            "Vehicle.Teleop.EnginePower".to_string(),
+            "Vehicle.Teleop.ControlCounter".to_string(),
+            "Vehicle.Teleop.ControlTimestampMs".to_string(),
+        ];
+        actuate_types = vec![
+            "int16".to_string(),
+            "float".to_string(),
+            "uint8".to_string(),
+            "uint32".to_string(),
+        ];
+        subscribe_paths = vec![
+            "Vehicle.Speed".to_string(),
+            "Vehicle.Chassis.Axle.SteeringAngle".to_string(),
+        ];
+    }
     
     let databroker_handle = tokio::spawn({
+        let paths = if (enable_cache) {
+            all_paths.clone()
+        } else {
+            subscribe_paths.clone()
+        };
         handle_databroker_publication(
             Arc::clone(&provider_queue),
             v2_client,
             zenoh_session.clone(),
-            paths.clone()
+            paths.clone(),
+            enable_cache,           
         )
     });
     
     let zenoh_handle = tokio::spawn({
+        let (paths, signal_types) = if (enable_cache) {
+            (all_paths.clone(), all_signal_types.clone())
+        } else {
+            (actuate_paths.clone(), actuate_types.clone())
+        };
         handle_zenoh_communication(
             Arc::clone(&provider_queue),
             v1_client_actuation,            // v2_client_actuation
             zenoh_session.clone(),
             paths.clone(),
-            signal_types.clone()
+            signal_types.clone(),
+            enable_cache,           
         )
     });
     
