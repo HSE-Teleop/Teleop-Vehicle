@@ -1,8 +1,9 @@
-use kuksa_rust_sdk::kuksa::common::ClientTraitV2;
+use kuksa_rust_sdk::kuksa::common::{ClientTraitV1, ClientTraitV2};
 use kuksa_rust_sdk::kuksa::val::v2::KuksaClientV2;
+use kuksa_rust_sdk::kuksa::val::v1::KuksaClient;
 use kuksa_rust_sdk::v2_proto::value::TypedValue;
-use kuksa_rust_sdk::v2_proto;
-use std::collections::VecDeque;
+use kuksa_rust_sdk::{v1_proto, v2_proto};
+use std::collections::{HashMap, VecDeque};
 use std::string::ToString;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -10,9 +11,9 @@ use std::time::Duration;
 mod utils;
 use utils::kuksa_utils::create_kuksa_client;
 
-use crate::utils::kuksa_utils::{s_typed_value_to_zenoh_bytes, typed_value_to_string};
+use crate::utils::kuksa_utils::{create_kuksa_client_v1, s_typed_value_to_zenoh_bytes, typed_value_to_string};
 use crate::utils::provider_utils::{Message, MessageCache};
-use crate::utils::utils::wrap_value_by_typed_value;
+use crate::utils::utils::{wrap_value_by_datapoint_value, wrap_value_by_typed_value};
 use crate::utils::zenoh_utils::create_zenoh_session;
 use zenoh::bytes::ZBytes;
 use zenoh::qos::Priority;
@@ -38,7 +39,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
     // let mut v2_client = create_kuksa_client("").await;
     // let paths = vec![vss_paths.to_owned()];         // Can't subscribe to all paths in the tree
     println!("✅ Subscribed to {:?}!", signals);
-    match v2_client.subscribe(signals.clone(), None).await
+    match ClientTraitV2::subscribe(&mut v2_client, signals.clone(), None).await
     {
         Ok(mut stream) => {
             // let session = zenoh::open(zenoh::Config::default()).await.unwrap();
@@ -92,7 +93,7 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
 /// 
 /// Conversion:
 ///     Uses the defined types to cast the signal value based on the path
-async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut v2_client: KuksaClientV2, zenoh_session: Session, signals: Vec<String>, signal_types: Vec<String>) {
+async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut kuksa_client: KuksaClient, zenoh_session: Session, signals: Vec<String>, signal_types: Vec<String>) {
     if signals.len() != signal_types.len() {
         panic!("Signals and signal types must be of the same length!");
     }
@@ -131,8 +132,10 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
             println!("{} not subscribed!\n", parsed_signal);
             continue;
         }
-        
+
+        // TypedValue gets used anyway to compare cache in databroker publication
         let value = wrap_value_by_typed_value(msg.clone(), signal_types[signal_index.unwrap()].clone());
+        let v1_value = wrap_value_by_datapoint_value(msg.clone(), signal_types[signal_index.unwrap()].clone());
         let inferred_value = typed_value_to_string(value.clone());
         
         println!("DEBUG: {} -> {:?}\n{:?}", 
@@ -156,12 +159,37 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
         }
 
         // Publishing to the databroker
-        match v2_client.actuate(
+        /* v2 specific
+        match kuksa_client.actuate(
             parsed_signal.to_owned(),
             v2_proto::Value {
                 typed_value: Some(value),
             },
         ).await {
+            Ok(_) => {
+                println!(
+                    "Value published successful for signal {:?}",
+                    parsed_signal
+                );
+            }
+            Err(err) => {
+                println!(
+                    "Publishing value for signal {:?} failed: {:?}",
+                    parsed_signal, err
+                );
+            }
+        }*/
+        // v1 downgrade for actuation with CAN-Provider
+        let mut datapoints = HashMap::with_capacity(1);
+        datapoints.insert(
+            parsed_signal.to_owned(),
+            v1_proto::Datapoint {
+                timestamp: None,
+                // value: Some(v1_proto::datapoint::Value::Float(40.0)),
+                value: Some(v1_value),
+            },
+        );
+        match kuksa_client.set_target_values(datapoints).await {
             Ok(_) => {
                 println!(
                     "Value published successful for signal {:?}",
@@ -188,7 +216,8 @@ async fn main() {
     // Creating kuksa client to subscribe on the databroker
     let v2_client = create_kuksa_client("").await;
     // Creating another kuksa client for zenoh communication
-    let v2_client_actuation = create_kuksa_client("").await;
+    // let v2_client_actuation = create_kuksa_client("").await;
+    let v1_client_actuation = create_kuksa_client_v1("").await;
     let zenoh_session = create_zenoh_session(CONFIG).await;
     // let paths = "Vehicle.ADAS.PowerOptimizeLevel".parse().unwrap();
     // Later replace the array with the config
@@ -219,7 +248,7 @@ async fn main() {
     let zenoh_handle = tokio::spawn({
         handle_zenoh_communication(
             Arc::clone(&provider_queue),
-            v2_client_actuation,
+            v1_client_actuation,            // v2_client_actuation
             zenoh_session.clone(),
             paths.clone(),
             signal_types.clone()
