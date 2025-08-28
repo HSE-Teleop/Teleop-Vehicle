@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Debug;
 
 pub struct MessageCache {
-    pub message: VecDeque<Message>,
+    pub messages: VecDeque<Message>,
 }
 #[derive(Debug)]
 pub struct Message {
@@ -34,7 +34,7 @@ impl Message {
 impl fmt::Display for MessageCache {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // let out_stream = self.message.iter().map(|msg| msg.fmt());
-        write!(f, "[{:?}]", self.message)           // for each message
+        write!(f, "[{:?}]", self.messages)           // for each message
     }
 }
 
@@ -42,10 +42,10 @@ impl MessageCache {
     pub fn push_message(&mut self, msg: String, signal: String) {
         // println!("\nPushing messages into the cache: {}\n", msg);
         let new_message: Message = Message {msg, signal};           // Shorthand initializer instead of: {msg: msg, signal: signal}
-        self.message.push_back(new_message);
+        self.messages.push_back(new_message);
     }
     fn pop_message(&mut self) -> Option<Message> {
-        self.message.pop_front()
+        self.messages.pop_front()
     }
     /// When called from the kuksa thread expects to be a new message (not the current income zenoh message) <br/>
     /// Therefore, <br/>
@@ -53,11 +53,12 @@ impl MessageCache {
     ///     returns false when it's considered a double. <br/>
     ///         => When considered a double, the double gets polled from the cache
     pub fn expect_outgoing_message(&mut self, expected: Message) -> (bool, Option<Message>) {
-        if self.message.is_empty() {
+        if self.messages.is_empty() {
             return (true, None);
         }
-        println!("\nMessages in cache: {:?}\n", self.message);
-        if self.message[0] == expected {
+        // println!("\nMessages in cache: {:?}\n", self.message);
+        println!("\n {} messages in cache.\n", self.messages.len());
+        if self.messages[0] == expected {
             (false, self.pop_message())
         } else {
             (true, None)

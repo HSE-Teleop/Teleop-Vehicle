@@ -69,9 +69,9 @@ async fn handle_databroker_publication(message_cache: Arc<Mutex<MessageCache>>, 
                         )
                             .priority(Priority::RealTime)
                             .await.unwrap();
-                        println!("Published {:?} -> {}", value, signal);
+                        println!("[Put] {:?} -> {}", value, signal);
                     } else {
-                        println!("Debug: Found double {:?}", double_message.unwrap());
+                        println!("Deny output! Found double: {:?}", double_message.unwrap());
                     }
                 }
                 // tokio::time::sleep(Duration::from_secs(1)).await;
@@ -184,7 +184,7 @@ async fn main() {
     println!("Starting provider...");
 
     // Using own storage for the provider to handle messages
-    let provider_queue = Arc::new(Mutex::new( MessageCache { message: VecDeque::new() } ));
+    let provider_queue = Arc::new(Mutex::new( MessageCache { messages: VecDeque::new() } ));
     // Creating kuksa client to subscribe on the databroker
     let v2_client = create_kuksa_client("").await;
     // Creating another kuksa client for zenoh communication
@@ -196,15 +196,15 @@ async fn main() {
         // "Vehicle.Speed".to_string(),
         "Vehicle.Teleop.SteeringAngle".to_string(),
         "Vehicle.Teleop.EnginePower".to_string(),
-        "Vehicle.Teleop.ControlCounter".to_string(),
-        "Vehicle.Teleop.ControlTimestampMs".to_string(),
+        // "Vehicle.Teleop.ControlCounter".to_string(),
+        // "Vehicle.Teleop.ControlTimestampMs".to_string(),
     ];
     let signal_types = vec![
         // "float".to_string(),
         "int16".to_string(),
         "float".to_string(),
-        "uint8".to_string(),     // Should be uint8
-        "uint32".to_string(),
+        // "uint8".to_string(),     // Should be uint8
+        // "uint32".to_string(),
     ];
     
     let databroker_handle = tokio::spawn({
