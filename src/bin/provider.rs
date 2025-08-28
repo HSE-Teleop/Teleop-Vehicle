@@ -143,10 +143,12 @@ async fn handle_zenoh_communication(message_cache: Arc<Mutex<MessageCache>>, mut
         let v1_value = wrap_value_by_datapoint_value(msg.clone(), signal_types[signal_index.unwrap()].clone());
         let inferred_value = typed_value_to_string(value.clone());
         
-        println!("DEBUG: {} -> {:?}\n{:?}", 
+        println!("DEBUG: {} -> {:?}/{:?}\n{:?}", 
                  signal_types[signal_index.unwrap()].clone(), 
-                 value,
-                 sample);
+                 value, 
+                 v1_value, 
+                 sample
+        );
         
         // Checking if the provider can resolve the correct value for the specific path
         // If the received string from the zenoh message differs from the inferred value, then stop the publishing process

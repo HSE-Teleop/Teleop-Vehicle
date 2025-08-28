@@ -77,6 +77,7 @@ pub fn s_typed_value_to_zenoh_bytes(value: TypedValue) -> ZBytes {
                                                 // Convert double
                                                 Ok(cast_value) => {
                                                     ZBytes::from(&cast_value.to_string())
+                                                    // ZBytes::from(&format!("{:?}", cast_value))
                                                 }
                                                 Err(_) => {
                                                     // Handle other types
@@ -156,12 +157,13 @@ pub fn typed_value_to_string(value: TypedValue) -> String {
                                         Err(boxed_value) => match boxed_value.downcast::<f32>() {
                                             // Convert float
                                             Ok(cast_value) => {
-                                                cast_value.to_string()
+                                                format!("{:?}", cast_value)
                                             }
                                             Err(boxed_value) => match boxed_value.downcast::<f64>() {
                                                 // Convert double
                                                 Ok(cast_value) => {
-                                                    cast_value.to_string()
+                                                    format!("{:?}", cast_value)
+                                                    // cast_value.to_string()
                                                 }
                                                 Err(_) => {
                                                     // Handle other types
