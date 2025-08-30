@@ -1,0 +1,22 @@
+# --- keep the context small and stable ---
+
+# Rust build artifacts
+target
+**/target
+
+# VCS / IDE
+.git
+.git/*
+.idea
+.vscode
+*.iml
+
+# OS/editor cruft
+.DS_Store
+*.swp
+*~
+
+# Logs & temp
+*.log
+tmp
+**/tmp

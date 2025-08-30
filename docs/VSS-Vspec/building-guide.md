@@ -7,7 +7,7 @@ This guide should help to build a VSS based on our own VSS structure.
 The installation of the VSS Tools and the activated python virtual environment are well explained in the guide of the [VSS Tools repo](https://github.com/COVESA/vss-tools?tab=readme-ov-file#installation).</br>
 Neverthless it is optimized for the Linux operating system. We use Windows on our local machines so here is a short guide update for Windows users:
 
-1. Have Python installed to create a virtual environment.
+1. Have Python installed. To create a virtual environment execute this command: `python -m venv .venv`
 2. The `source` command is not available in Windows. Instead use `.\.venv\Scripts\Activate.ps1` (Powershell) or `call .\.venv\Scripts\activate.bat` (CMD) to activate the virtual environment.
 3. Follow the guide in the repo (we used the default branch)
 

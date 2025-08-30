@@ -3,6 +3,20 @@
     "children": {
       "Chassis": {
         "children": {
+          "Axle": {
+            "children": {
+              "SteeringAngle": {
+                "datatype": "float",
+                "dbc2vss": {
+                  "signal": "SteeringFb"
+                },
+                "description": "The steering angle of the axle",
+                "type": "sensor"
+              }
+            },
+            "description": "Axle",
+            "type": "branch"
+          },
           "FrontCamera": {
             "datatype": "boolean",
             "description": "Check if the frontcamera exists.",
@@ -53,7 +67,10 @@
         "datatype": "float",
         "dbc2vss": {
           "interval_ms": 10,
-          "signal": "VelocityFb"
+          "signal": "VelocityFb",
+          "transform": {
+            "math": "max(-1,min(1,(x-90)/15))"
+          }
         },
         "description": "Vehicle speed.",
         "type": "sensor",
@@ -61,17 +78,34 @@
       },
       "Teleop": {
         "children": {
+          "ControlCounter": {
+            "datatype": "uint8",
+            "description": "Counter",
+            "type": "actuator",
+            "vss2dbc": {
+              "signal": "ControlCounter"
+            }
+          },
+          "ControlTimestampMs": {
+            "datatype": "uint32",
+            "description": "Timestamp in ms",
+            "type": "actuator",
+            "unit": "ms",
+            "vss2dbc": {
+              "signal": "ControlTimestamp_ms"
+            }
+          },
           "EnginePower": {
             "datatype": "float",
             "description": "Percentual power of the engine. <0 = Engine works against its current speed, 0 = Neutral state of the engine, >0 = Engine runs with a percentage of its power.",
-            "max": 1,
-            "min": -1,
+            "max": 1000,
+            "min": -1000,
             "type": "actuator",
             "unit": "percent",
             "vss2dbc": {
               "signal": "AccelerationCmd",
               "transform": {
-                "math": "(x + 1) * 127.5"
+                "math": "round((x*15)+90)"
               }
             }
           },
@@ -93,10 +127,7 @@
             "type": "actuator",
             "unit": "degrees",
             "vss2dbc": {
-              "signal": "SteeringCmd",
-              "transform": {
-                "math": "x + 128"
-              }
+              "signal": "SteeringCmd"
             }
           }
         },

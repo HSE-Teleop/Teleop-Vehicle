@@ -27,38 +27,29 @@ async fn main() {
     println!("Opening session...");
     let session = zenoh::open(config).await.unwrap();
 
-    println!("Declaring Publisher on 'Vehicle/ADAS/PowerOptimizeLevel'...");
-    let publisher = session.declare_publisher("Vehicle/ADAS/PowerOptimizeLevel").await.unwrap();
+    println!("Declaring Publisher on 'Vehicle/Teleop/EnginePower'...");
+    let publisher = session.declare_publisher("Vehicle/Teleop/EnginePower").await.unwrap();
 
-    let mut value: f32 = 1.87;
-    let mut value2: u8 = 254;
-    let mut value3: u32 = 50;
-    let mut value4: bool = false;
+    let mut value: f32 = 0.0;
     
     println!("Press CTRL-C to quit...");
     loop {
+        if value >= 1.0 - f32::EPSILON {
+            value = 0.0;
+        }
+        let shown = (value * 10.0).round() / 10.0;
         // Refer to z_bytes.rs to see how to serialize different types of messages
-        let payload = ZBytes::from(&value.to_owned().to_be_bytes()[..]);
-        let string_payload = ZBytes::from(&value.to_owned().to_string()[..]);
-        println!("Putting Data ('Vehicle/ADAS/PowerOptimizeLevel': '{}' | {:?} / {:?})...",
-                 value,
+        let payload = ZBytes::from(&shown.to_be_bytes()[..]);
+        let string_payload = ZBytes::from(format!("{:.1}", shown));
+        println!("Putting Data ('Vehicle/Teleop/EnginePower': '{}' | {:?} / {:?})...",
+                 shown,
                  payload,
                  string_payload
         );
         // publisher.put(payload).await.unwrap();
         publisher.put(string_payload).await.unwrap();
-
-        // u8 goes from 0-255
-        // Here 10 because the subscribed key has only 10 levels
-        if(value >= 10 as f32) {
-            value = 2 as f32;      // Resets level to 2 to reserve 0 & 1 for databroker
-        } else {
-            // A little bit of randomness
-            // let mut rng = rand::rng();
-            // value += (random::<u8>() % 2) as f32;
-            value += 1 as f32;
-        }
         
+        value += 0.1;
         // Delays the zenoh message sometimes
         // if random::<i32>() % 2 == 0 {
             tokio::time::sleep(Duration::from_secs(2)).await;

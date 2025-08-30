@@ -36,9 +36,14 @@ services:
 
   can-provider:
     image: ghcr.io/eclipse-kuksa/kuksa-can-provider/can-provider
+    environment:
+      LOG_LEVEL: "debug"
     container_name: can-provider
     depends_on:
       - databroker
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
     volumes:
       - type: bind
         source: ./config/dbc_feeder.ini
@@ -56,9 +61,11 @@ services:
         source: ./candump-2018-09-29_032339.log
         target: /data/candump-2018-09-29_032339.log
         read_only: true
+      - type: bind
+        source: ./dbc_default_values.json
+        target: /mapping/dbc_default_values.json
     command: ["--config", "/config/dbc_feeder.ini"]
-    networks:
-      - kuksa
+
 
 
   subscriber:
